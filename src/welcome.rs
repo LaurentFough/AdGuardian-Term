@@ -50,6 +50,15 @@ fn print_error(message: &str, sub_message: &str, error: Option<&Error>) {
     std::process::exit(1);
 }
 
+fn log_errr(mut err: &dyn (std::error::Error + 'static)) -> String {
+    let mut s = format!("{}", err);
+    while let Some(src) = err.source() {
+        let _ = write!(s, "\n\nCaused by: {}", src);
+        err = src;
+    }
+    s
+}
+
 /// Given a key, get the value from the environmental variables, and print it to the console
 fn get_env(key: &str) -> Result<String, env::VarError> {
     env::var(key).map(|v| {
@@ -147,6 +156,7 @@ async fn verify_connection(
                 "Please check your environmental variables and try again.",
                 Some(&e),
             );
+            log_errr(e);
             Ok(())
         }
     }
