@@ -50,7 +50,8 @@ fn print_error(message: &str, sub_message: &str, error: Option<&Error>) {
     std::process::exit(1);
 }
 
-fn log_errr(mut err: &dyn (std::error::Error + 'static)) -> String {
+//fn log_errr(mut err: &dyn (std::error::Error + 'static)) -> String {
+fn log_errr(mut err: &(dyn std::error::Error + 'static)) -> String {
     let mut s = format!("{}", err);
     while let Some(src) = err.source() {
         let _ = write!(s, "\n\nCaused by: {}", src);
