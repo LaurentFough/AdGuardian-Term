@@ -301,6 +301,7 @@
 <a href="#301" id="301">301</a>
 <a href="#302" id="302">302</a>
 <a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     io:: {<span class="self">self</span>, Write},
     env,
@@ -403,8 +404,8 @@
 
 <span class="doccomment">/// With the users specified AdGuard details, verify the connection (exit on fail)
 </span><span class="kw">async fn </span>verify_connection(
-    client: <span class="kw-2">&amp;</span>Client,
-    ip: String,
+    <span class="comment">//client: &amp;Client,
+    </span>ip: String,
     port: String,
     protocol: String,
     username: String,
@@ -419,9 +420,10 @@
 
     <span class="kw">let </span>url = <span class="macro">format!</span>(<span class="string">"{}://{}:{}/control/status"</span>, protocol, ip, port);
 
-    <span class="kw">match </span>client
+    <span class="kw">match </span>reqwest::Client::builder()
         .danger_accept_invalid_certs(<span class="bool-val">true</span>)
         .danger_accept_invalid_hostnames(<span class="bool-val">true</span>)
+        .build()
         .get(<span class="kw-2">&amp;</span>url)
         .headers(headers)
         .timeout(Duration::from_secs(<span class="number">2</span>))
@@ -473,9 +475,9 @@
     <span class="kw">let </span>url = <span class="macro">format!</span>(<span class="string">"https://crates.io/api/v1/crates/{}"</span>, crate_name);
     <span class="kw">let </span>client = reqwest::Client::new();
     <span class="kw">let </span>res = client.get(<span class="kw-2">&amp;</span>url)
-        .danger_accept_invalid_certs(<span class="bool-val">true</span>)
-        .danger_accept_invalid_hostnames(<span class="bool-val">true</span>)
-        .header(reqwest::header::USER_AGENT, <span class="string">"version_check (adguardian.as93.net)"</span>)
+        <span class="comment">//.danger_accept_invalid_certs(true)
+        //.danger_accept_invalid_hostnames(true)
+        </span>.header(reqwest::header::USER_AGENT, <span class="string">"version_check (adguardian.as93.net)"</span>)
         .send()
         .<span class="kw">await</span><span class="question-mark">?</span>;
 
