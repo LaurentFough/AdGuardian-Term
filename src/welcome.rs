@@ -100,7 +100,7 @@ fn check_version(version: Option<&str>) {
 
 /// With the users specified AdGuard details, verify the connection (exit on fail)
 async fn verify_connection(
-    client: &Client,
+    //client: &Client,
     ip: String,
     port: String,
     protocol: String,
@@ -116,9 +116,10 @@ async fn verify_connection(
 
     let url = format!("{}://{}:{}/control/status", protocol, ip, port);
 
-    match client
+    match reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
         .danger_accept_invalid_hostnames(true)
+        .build()
         .get(&url)
         .headers(headers)
         .timeout(Duration::from_secs(2))
@@ -170,8 +171,8 @@ async fn get_latest_version(crate_name: &str) -> Result<String, Box<dyn std::err
     let url = format!("https://crates.io/api/v1/crates/{}", crate_name);
     let client = reqwest::Client::new();
     let res = client.get(&url)
-        .danger_accept_invalid_certs(true)
-        .danger_accept_invalid_hostnames(true)
+        //.danger_accept_invalid_certs(true)
+        //.danger_accept_invalid_hostnames(true)
         .header(reqwest::header::USER_AGENT, "version_check (adguardian.as93.net)")
         .send()
         .await?;
