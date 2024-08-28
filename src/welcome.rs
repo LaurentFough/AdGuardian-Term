@@ -3,17 +3,12 @@ use std::{
     env,
     time::Duration
 };
-
-use reqwest::{Client};
+use reqwest::{Client, Error};
 use reqwest::header::{HeaderMap, HeaderValue};
+use colored::*;
 use serde_json::Value;
 use serde::Deserialize;
-use colored::*;
-
 use semver::{Version};
-
-//use thiserror::Error;
-use thiserror::*;
 
 /// Reusable function that just prints success messages to the console
 fn print_info(text: &str, is_secondary: bool) {
@@ -103,16 +98,6 @@ fn check_version(version: Option<&str>) {
     }
 }
 
-#[derive(Error, Debug)]
-enum VerifyError {
-    #[error("Authentication failed")]
-    AuthFailed,
-    #[error("Connection failed: {0}")]
-    ConnectionFailed(String),
-    #[error("Version check failed: {0}")]
-    VersionCheckFailed(String),
-}
-
 /// With the users specified AdGuard details, verify the connection (exit on fail)
 async fn verify_connection(
 	client: &Client,
@@ -175,8 +160,6 @@ async fn get_latest_version(crate_name: &str) -> Result<String, Box<dyn std::err
     let url = format!("https://crates.io/api/v1/crates/{}", crate_name);
     let client = reqwest::Client::new();
     let res = client.get(&url)
-        //.danger_accept_invalid_certs(true)
-        //.danger_accept_invalid_hostnames(true)
         .header(reqwest::header::USER_AGENT, "version_check (adguardian.as93.net)")
         .send()
         .await?;
