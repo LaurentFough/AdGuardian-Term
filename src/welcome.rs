@@ -2,9 +2,8 @@ use std::{
     io:: {self, Write},
     env,
     time::Duration
+    fmt::Write as FmtWrite
 };
-
-use fmt::Write as FmtWrite;
 
 use reqwest::{Client, Error};
 use colored::*;
