@@ -8,8 +8,6 @@ use reqwest::{Client};
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde_json::Value;
 use serde::Deserialize;
-use std::time::Duration;
-use thiserror::Error;
 use colored::*;
 
 use semver::{Version};
@@ -102,16 +100,6 @@ fn check_version(version: Option<&str>) {
     }
 }
 
-#[derive(Error, Debug)]
-enum VerifyError {
-    #[error("Authentication failed")]
-    AuthFailed,
-    #[error("Connection failed: {0}")]
-    ConnectionFailed(String),
-    #[error("Version check failed: {0}")]
-    VersionCheckFailed(String),
-}
-
 /// With the users specified AdGuard details, verify the connection (exit on fail)
 async fn verify_connection(
 	client: &Client,
@@ -157,22 +145,6 @@ async fn verify_connection(
 			Err(VerifyError::AuthFailed.into())
 	}
 }
-
-// fn check_version(version: Option<&str>) -> Result<(), VerifyError> {
-// 	match version {
-// 			Some(v) if v.starts_with("v") => Ok(()),
-// 			Some(v) => Err(VerifyError::VersionCheckFailed(v.to_string())),
-// 			None => Err(VerifyError::VersionCheckFailed("Unknown version".into())),
-// 	}
-// }
-
-// fn print_error(message: &str, hint: &str, error: Option<&dyn std::error::Error>) {
-// 	eprintln!("{}", message.red());
-// 	eprintln!("{}", hint.yellow());
-// 	if let Some(e) = error {
-// 			eprintln!("{}", e.to_string().red());
-// 	}
-// }
 
 #[derive(Deserialize)]
 struct CratesIoResponse {
