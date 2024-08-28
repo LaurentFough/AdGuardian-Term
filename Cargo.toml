@@ -1,7 +1,7 @@
 [package]
 name = "adguardian"
-version = "1.6.0"
-edition = "2021"
+version = "1.6.1"
+edition = "2024"
 authors = ["Alicia Sykes"]
 description = "Terminal-based, real-time traffic monitoring and statistics for your AdGuard Home instance "
 repository = "https://github.com/Lissy93/AdGuardian-Term"
@@ -24,7 +24,7 @@ crossterm = { version = "0.22.0", features = ["serde"] }
 # Extension of futures for async computation
 futures = "0.3"
 # HTTP client
-reqwest = { version = "0.11", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+reqwest = { version = "0.12.7", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 # Decerilization of responses
 serde = { version = "1.0", features = ["derive"] }
 # Decerilization of JSON responses
