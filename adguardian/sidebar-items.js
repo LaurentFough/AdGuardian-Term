@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["main","run"],"mod":["fetch","ui","welcome","widgets"]};
