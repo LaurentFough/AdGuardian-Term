@@ -252,7 +252,7 @@ pub async fn welcome() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("{}", "\nStarting initialization checks...".blue());
 
-    let client = Client::builder()
+    let client = Client::builder();
 
     // List of available flags, ant their associated env vars
     let flags = [
@@ -302,7 +302,7 @@ pub async fn welcome() -> Result<(), Box<dyn std::error::Error>> {
     let password = get_env("ADGUARD_PASSWORD")?;
 
     // Verify that we can connect, authenticate, and that version is supported (exit on failure)
-    verify_connection(client, ip, port, protocol, username, password).await?;
+    verify_connection(&Client, ip, port, protocol, username, password).await?;
 
     Ok(())
 }
