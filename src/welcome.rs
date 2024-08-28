@@ -1,7 +1,7 @@
 use std::{
     io:: {self, Write},
     env,
-    time::Duration
+    time::Duration,
     fmt::Write as FmtWrite
 };
 
