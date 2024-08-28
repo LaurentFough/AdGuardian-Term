@@ -4,6 +4,8 @@ use std::{
     time::Duration
 };
 use reqwest::{Client, Error};
+use reqwest::ClientBuilder;
+
 use colored::*;
 
 use serde_json::Value;
@@ -100,7 +102,8 @@ fn check_version(version: Option<&str>) {
 
 /// With the users specified AdGuard details, verify the connection (exit on fail)
 async fn verify_connection(
-    client: &Client,
+    //client: &Client,
+    client: &ClientBuilder,
     ip: String,
     port: String,
     protocol: String,
@@ -116,7 +119,8 @@ async fn verify_connection(
 
     let url = format!("{}://{}:{}/control/status", protocol, ip, port);
 
-    match reqwest::Client::builder()
+    let client = ClientBuilder::new()
+    //match client
         .danger_accept_invalid_certs(true)
         .danger_accept_invalid_hostnames(true)
         .build()
