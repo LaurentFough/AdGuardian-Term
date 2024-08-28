@@ -1,7 +1,7 @@
 [package]
 name = "adguardian"
 version = "1.6.1"
-edition = "2024"
+edition = "2021"
 authors = ["Alicia Sykes"]
 description = "Terminal-based, real-time traffic monitoring and statistics for your AdGuard Home instance "
 repository = "https://github.com/Lissy93/AdGuardian-Term"
