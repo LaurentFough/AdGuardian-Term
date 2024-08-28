@@ -3,14 +3,15 @@ use std::{
     env,
     time::Duration
 };
+
+use fmt::Write as FmtWrite
+
 use reqwest::{Client, Error};
 use colored::*;
 
 use serde_json::Value;
 use serde::Deserialize;
 use semver::{Version};
-
-use std::fmt::Write;
 
 /// Reusable function that just prints success messages to the console
 fn print_info(text: &str, is_secondary: bool) {
@@ -53,11 +54,21 @@ fn print_error(message: &str, sub_message: &str, error: Option<&Error>) {
 }
 
 //fn log_errr(mut err: &dyn (std::error::Error + 'static)) -> String {
-fn log_errr(mut err: &(dyn std::error::Error + 'static)) -> String {
+// fn log_errr(mut err: &(dyn std::error::Error + 'static)) -> String {
+//     let mut s = format!("{}", err);
+//     while let Some(src) = err.source() {
+//         let _ = write!(s, "\n\nCaused by: {}", src);
+//         err = src;
+//     }
+//     s
+// }
+fn log_err(err: &(dyn std::error::Error + 'static)) -> String {
     let mut s = format!("{}", err);
-    while let Some(src) = err.source() {
-        let _ = write!(s, "\n\nCaused by: {}", src);
-        err = src;
+    let mut current_err = err;
+
+    while let Some(src) = current_err.source() {
+        let _ = FmtWrite::write_fmt(&mut s, format_args!("\n\nCaused by: {}", src));
+        current_err = src;
     }
     s
 }
