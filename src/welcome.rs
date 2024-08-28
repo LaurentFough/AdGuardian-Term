@@ -100,6 +100,16 @@ fn check_version(version: Option<&str>) {
     }
 }
 
+#[derive(Error, Debug)]
+enum VerifyError {
+    #[error("Authentication failed")]
+    AuthFailed,
+    #[error("Connection failed: {0}")]
+    ConnectionFailed(String),
+    #[error("Version check failed: {0}")]
+    VersionCheckFailed(String),
+}
+
 /// With the users specified AdGuard details, verify the connection (exit on fail)
 async fn verify_connection(
 	client: &Client,
