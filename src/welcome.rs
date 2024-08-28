@@ -4,7 +4,7 @@ use std::{
     time::Duration
 };
 
-use reqwest::{Client};
+use reqwest::{Client, Error};
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde_json::Value;
 use serde::Deserialize;
