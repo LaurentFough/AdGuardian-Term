@@ -12,7 +12,8 @@ use colored::*;
 
 use semver::{Version};
 
-use thiserror::Error;
+//use thiserror::Error;
+use thiserror::*;
 
 /// Reusable function that just prints success messages to the console
 fn print_info(text: &str, is_secondary: bool) {
