@@ -239,7 +239,7 @@ pub async fn welcome() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("{}", "\nStarting initialization checks...".blue());
 
-    let client = &ClientBuilder::new();
+    let client = Client::builder()
 
     // List of available flags, ant their associated env vars
     let flags = [
