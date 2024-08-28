@@ -3,8 +3,8 @@ use std::{
     env,
     time::Duration
 };
-use reqwest::{Client, Error};
-use reqwest::ClientBuilder;
+//use reqwest::{Client, Error};
+use reqwest::{ClientBuilder, Error};
 
 use colored::*;
 
