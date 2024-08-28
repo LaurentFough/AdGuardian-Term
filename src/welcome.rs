@@ -3,13 +3,15 @@ use std::{
     env,
     time::Duration
 };
-use reqwest::{Client, Error};
-//use reqwest::{ClientBuilder, Error};
 
-use colored::*;
-
+use reqwest::{Client};
+use reqwest::header::{HeaderMap, HeaderValue};
 use serde_json::Value;
 use serde::Deserialize;
+use std::time::Duration;
+use thiserror::Error;
+use colored::*;
+
 use semver::{Version};
 
 /// Reusable function that just prints success messages to the console
@@ -71,11 +73,11 @@ fn get_env(key: &str) -> Result<String, env::VarError> {
 /// Given a possibly undefined version number, check if it's present and supported
 fn check_version(version: Option<&str>) {
     let min_version = Version::parse("0.107.29").unwrap();
-    
+
     match version {
         Some(version_str) => {
             let adguard_version = Version::parse(&version_str[1..]).unwrap();
-            
+
             if adguard_version < min_version {
                 print_error(
                     "AdGuard Home version is too old, and is now unsupported",
@@ -100,62 +102,77 @@ fn check_version(version: Option<&str>) {
     }
 }
 
+#[derive(Error, Debug)]
+enum VerifyError {
+    #[error("Authentication failed")]
+    AuthFailed,
+    #[error("Connection failed: {0}")]
+    ConnectionFailed(String),
+    #[error("Version check failed: {0}")]
+    VersionCheckFailed(String),
+}
+
 /// With the users specified AdGuard details, verify the connection (exit on fail)
 async fn verify_connection(
-    client: &Client,
-    //client: &ClientBuilder,
-    ip: String,
-    port: String,
-    protocol: String,
-    username: String,
-    password: String,
+	client: &Client,
+	ip: String,
+	port: String,
+	protocol: String,
+	username: String,
+	password: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("{}", "\nVerifying connection to your AdGuard instance...".blue());
+	println!("{}", "\nVerifying connection to your AdGuard instance...".blue());
 
-    let auth_string = format!("{}:{}", username, password);
-    let auth_header_value = format!("Basic {}", base64::encode(&auth_string));
-    let mut headers = reqwest::header::HeaderMap::new();
-    headers.insert("Authorization", auth_header_value.parse()?);
+	let auth_string = format!("{}:{}", username, password);
+	let auth_header_value = format!("Basic {}", base64::encode(&auth_string));
+	let mut headers = HeaderMap::new();
+	headers.insert("Authorization", HeaderValue::from_str(&auth_header_value)?);
 
-    let url = format!("{}://{}:{}/control/status", protocol, ip, port);
+	let url = format!("{}://{}:{}/control/status", protocol, ip, port);
 
-    let client = Client::builder()
-    //match client
-        .danger_accept_invalid_certs(true)
-        .danger_accept_invalid_hostnames(true)
-        .get(&url)
-        .headers(headers)
-        .timeout(Duration::from_secs(2))
-        .build()? {
-        Ok(res) if res.status().is_success() => {
-            // Get version string (if present), and check if valid - exit if not
-            let body: Value = res.json().await?;
-            check_version(body["version"].as_str());
-            // All good! Print success message :)
-            let safe_version = body["version"].as_str().unwrap_or("mystery version");
-            println!("{}", format!("AdGuard ({}) connection successful!\n", safe_version).green());
-            Ok(())
-        }
-        // Connection failed to authenticate. Print error and exit
-        Ok(_) => {
-            print_error(
-                &format!("Authentication with AdGuard at {}:{} failed", ip, port),
-                "Please check your environmental variables and try again.",
-                None,
-            );
-            Ok(())
-        },
-        // Connection failed to establish. Print error and exit
-        Err(e) => {
-            print_error(
-                &format!("Failed to connect to AdGuard at: {}:{}", ip, port),
-                "Please check your environmental variables and try again.",
-                Some(&e),
-            );
-            Ok(())
-        }
-    }
+	let client = Client::builder()
+			.danger_accept_invalid_certs(true)
+			.danger_accept_invalid_hostnames(true)
+			.timeout(Duration::from_secs(2)) // Set the timeout here
+			.build()?;
+
+	let res = client
+			.get(&url)
+			.headers(headers)
+			.send()
+			.await?;
+
+	if res.status().is_success() {
+			let body: Value = res.json().await?;
+			check_version(body["version"].as_str())?;
+			let safe_version = body["version"].as_str().unwrap_or("mystery version");
+			println!("{}", format!("AdGuard ({}) connection successful!\n", safe_version).green());
+			Ok(())
+	} else {
+			print_error(
+					&format!("Authentication with AdGuard at {}:{} failed", ip, port),
+					"Please check your environmental variables and try again.",
+					None,
+			);
+			Err(VerifyError::AuthFailed.into())
+	}
 }
+
+// fn check_version(version: Option<&str>) -> Result<(), VerifyError> {
+// 	match version {
+// 			Some(v) if v.starts_with("v") => Ok(()),
+// 			Some(v) => Err(VerifyError::VersionCheckFailed(v.to_string())),
+// 			None => Err(VerifyError::VersionCheckFailed("Unknown version".into())),
+// 	}
+// }
+
+// fn print_error(message: &str, hint: &str, error: Option<&dyn std::error::Error>) {
+// 	eprintln!("{}", message.red());
+// 	eprintln!("{}", hint.yellow());
+// 	if let Some(e) = error {
+// 			eprintln!("{}", e.to_string().red());
+// 	}
+// }
 
 #[derive(Deserialize)]
 struct CratesIoResponse {
@@ -298,7 +315,7 @@ pub async fn welcome() -> Result<(), Box<dyn std::error::Error>> {
     let protocol = get_env("ADGUARD_PROTOCOL")?;
     let username = get_env("ADGUARD_USERNAME")?;
     let password = get_env("ADGUARD_PASSWORD")?;
-    
+
     // Verify that we can connect, authenticate, and that version is supported (exit on failure)
     verify_connection(client, ip, port, protocol, username, password).await?;
 
