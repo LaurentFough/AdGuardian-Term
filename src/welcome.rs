@@ -3,8 +3,8 @@ use std::{
     env,
     time::Duration
 };
-//use reqwest::{Client, Error};
-use reqwest::{ClientBuilder, Error};
+use reqwest::{Client, Error};
+//use reqwest::{ClientBuilder, Error};
 
 use colored::*;
 
@@ -102,8 +102,8 @@ fn check_version(version: Option<&str>) {
 
 /// With the users specified AdGuard details, verify the connection (exit on fail)
 async fn verify_connection(
-    //client: &Client,
-    client: &ClientBuilder,
+    client: &Client,
+    //client: &ClientBuilder,
     ip: String,
     port: String,
     protocol: String,
@@ -119,16 +119,14 @@ async fn verify_connection(
 
     let url = format!("{}://{}:{}/control/status", protocol, ip, port);
 
-    let client = ClientBuilder::new()
+    let client = Client::builder()
     //match client
         .danger_accept_invalid_certs(true)
         .danger_accept_invalid_hostnames(true)
-        .build()
         .get(&url)
         .headers(headers)
         .timeout(Duration::from_secs(2))
-        .send()
-        .await? {
+        .build()? {
         Ok(res) if res.status().is_success() => {
             // Get version string (if present), and check if valid - exit if not
             let body: Value = res.json().await?;
