@@ -404,8 +404,8 @@
 
 <span class="doccomment">/// With the users specified AdGuard details, verify the connection (exit on fail)
 </span><span class="kw">async fn </span>verify_connection(
-    <span class="comment">//client: &amp;Client,
-    </span>ip: String,
+    client: <span class="kw-2">&amp;</span>Client,
+    ip: String,
     port: String,
     protocol: String,
     username: String,
