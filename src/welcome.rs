@@ -141,6 +141,7 @@ async fn verify_connection(
 					None,
 			);
 	}
+	Ok(())
 }
 
 #[derive(Deserialize)]
@@ -284,7 +285,7 @@ pub async fn welcome() -> Result<(), Box<dyn std::error::Error>> {
     let password = get_env("ADGUARD_PASSWORD")?;
 
     // Verify that we can connect, authenticate, and that version is supported (exit on failure)
-    verify_connection(client, ip, port, protocol, username, password).await?;
+    verify_connection(&Client, ip, port, protocol, username, password).await?;
 
     Ok(())
 }
