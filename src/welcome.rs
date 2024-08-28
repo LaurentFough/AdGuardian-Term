@@ -100,7 +100,7 @@ fn check_version(version: Option<&str>) {
 
 /// With the users specified AdGuard details, verify the connection (exit on fail)
 async fn verify_connection(
-    //client: &Client,
+    client: &Client,
     ip: String,
     port: String,
     protocol: String,
