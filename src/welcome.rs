@@ -4,7 +4,7 @@ use std::{
     time::Duration
 };
 
-use fmt::Write as FmtWrite
+use fmt::Write as FmtWrite;
 
 use reqwest::{Client, Error};
 use colored::*;
@@ -62,7 +62,7 @@ fn print_error(message: &str, sub_message: &str, error: Option<&Error>) {
 //     }
 //     s
 // }
-fn log_err(err: &(dyn std::error::Error + 'static)) -> String {
+fn log_errr(err: &(dyn std::error::Error + 'static)) -> String {
     let mut s = format!("{}", err);
     let mut current_err = err;
 
