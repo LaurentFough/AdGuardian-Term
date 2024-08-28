@@ -128,7 +128,7 @@ async fn verify_connection(
         .headers(headers)
         .timeout(Duration::from_secs(2))
         .send()
-        .await {
+        .await? {
         Ok(res) if res.status().is_success() => {
             // Get version string (if present), and check if valid - exit if not
             let body: Value = res.json().await?;
