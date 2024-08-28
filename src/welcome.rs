@@ -10,6 +10,8 @@ use serde_json::Value;
 use serde::Deserialize;
 use semver::{Version};
 
+use std::fmt::Write;
+
 /// Reusable function that just prints success messages to the console
 fn print_info(text: &str, is_secondary: bool) {
     if is_secondary {
@@ -157,7 +159,7 @@ async fn verify_connection(
                 "Please check your environmental variables and try again.",
                 Some(&e),
             );
-            log_errr(e);
+            log_errr(&e);
             Ok(())
         }
     }
