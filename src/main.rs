@@ -84,7 +84,7 @@ async fn run() -> anyhow::Result<()> {
 fn main() {
     let rt = tokio::runtime::Runtime::new().unwrap();
     rt.block_on(async {
-        welcome::welcome().await.map_err(|e| {
+        welcome::main().await.map_err(|e| {
             eprintln!("Failed to initialize: {}", e);
             std::io::Error::new(std::io::ErrorKind::Other, "Failed to initialize")
         }).unwrap();
