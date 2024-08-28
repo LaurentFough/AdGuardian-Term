@@ -1,15 +1,16 @@
 use std::{
-    io::{self, Write},
+    io:: {self, Write},
     env,
-    time::Duration,
+    time::Duration
 };
-use reqwest::{Client, ClientBuilder, Error};
+use reqwest::{Client, Error};
 use colored::*;
+
 use serde_json::Value;
 use serde::Deserialize;
-use semver::Version;
+use semver::{Version};
 
-// Reusable function that just prints success messages to the console
+/// Reusable function that just prints success messages to the console
 fn print_info(text: &str, is_secondary: bool) {
     if is_secondary {
         println!("{}", text.green().italic().dimmed());
@@ -18,7 +19,7 @@ fn print_info(text: &str, is_secondary: bool) {
     };
 }
 
-// Prints the AdGuardian ASCII art to console
+/// Prints the AdGuardian ASCII art to console
 fn print_ascii_art() {
     let art = r"
  █████╗ ██████╗  ██████╗ ██╗   ██╗ █████╗ ██████╗ ██████╗ ██╗ █████╗ ███╗   ██╗
@@ -34,7 +35,7 @@ fn print_ascii_art() {
     print_info("For documentation and support, please visit: https://github.com/lissy93/adguardian-term", true);
 }
 
-// Print error message, along with (optional) stack trace, then exit
+/// Print error message, along with (optional) stack trace, then exit
 fn print_error(message: &str, sub_message: &str, error: Option<&Error>) {
     eprintln!(
         "{}{}{}",
@@ -49,7 +50,7 @@ fn print_error(message: &str, sub_message: &str, error: Option<&Error>) {
     std::process::exit(1);
 }
 
-// Given a key, get the value from the environmental variables, and print it to the console
+/// Given a key, get the value from the environmental variables, and print it to the console
 fn get_env(key: &str) -> Result<String, env::VarError> {
     env::var(key).map(|v| {
         println!(
@@ -65,7 +66,7 @@ fn get_env(key: &str) -> Result<String, env::VarError> {
     })
 }
 
-// Given a possibly undefined version number, check if it's present and supported
+/// Given a possibly undefined version number, check if it's present and supported
 fn check_version(version: Option<&str>) {
     let min_version = Version::parse("0.107.29").unwrap();
     
@@ -97,7 +98,7 @@ fn check_version(version: Option<&str>) {
     }
 }
 
-// With the users specified AdGuard details, verify the connection (exit on fail)
+/// With the users specified AdGuard details, verify the connection (exit on fail)
 async fn verify_connection(
     client: &Client,
     ip: String,
@@ -162,7 +163,7 @@ struct Crate {
     max_version: String,
 }
 
-// Gets the latest version of the crate from crates.io
+/// Gets the latest version of the crate from crates.io
 async fn get_latest_version(crate_name: &str) -> Result<String, Box<dyn std::error::Error>> {
     let url = format!("https://crates.io/api/v1/crates/{}", crate_name);
     let client = reqwest::Client::new();
@@ -181,7 +182,7 @@ async fn get_latest_version(crate_name: &str) -> Result<String, Box<dyn std::err
     }
 }
 
-// Checks for updates to the crate, and prints a message if an update is available
+/// Checks for updates to the crate, and prints a message if an update is available
 async fn check_for_updates() {
     // Get crate name and version from Cargo.toml
     let crate_name = env!("CARGO_PKG_NAME");
@@ -223,30 +224,76 @@ async fn check_for_updates() {
     }
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Construct a reqwest Client that allows invalid certificates and invalid hostnames
-    let client = ClientBuilder::new()
-        .danger_accept_invalid_certs(true)
-        .danger_accept_invalid_hostnames(true)
-        .timeout(Duration::from_secs(10))
-        .build()?;
-    
-    // Print ascii art and welcome message
+
+/// Initiate the welcome script
+/// This function will:
+/// - Print the AdGuardian ASCII art
+/// - Check if there's an update available
+/// - Check for the required environmental variables
+/// - Prompt the user to enter any missing variables
+/// - Verify the connection to the AdGuard instance
+/// - Verify authentication is successful
+/// - Verify the AdGuard Home version is supported
+/// - Then either print a success message, or show instructions to fix and exit
+pub async fn welcome() -> Result<(), Box<dyn std::error::Error>> {
     print_ascii_art();
 
-    // Read the user's AdGuard instance details from environment variables
-    let adguard_ip = get_env("ADGUARD_IP")?;
-    let adguard_port = get_env("ADGUARD_PORT")?;
-    let adguard_protocol = get_env("ADGUARD_PROTOCOL")?;
-    let adguard_username = get_env("ADGUARD_USERNAME")?;
-    let adguard_password = get_env("ADGUARD_PASSWORD")?;
+    // Check for updates
+    check_for_updates().await;
 
-    // Verify connection to AdGuard instance
-    verify_connection(&client, adguard_ip, adguard_port, adguard_protocol, adguard_username, adguard_password).await?;
+    println!("{}", "\nStarting initialization checks...".blue());
 
-    // Check for updates to AdGuardian on crates.io
-    check_for_updates().await?;
+    let client = Client::new();
+
+    // List of available flags, ant their associated env vars
+    let flags = [
+        ("--adguard-ip", "ADGUARD_IP"),
+        ("--adguard-port", "ADGUARD_PORT"),
+        ("--adguard-username", "ADGUARD_USERNAME"),
+        ("--adguard-password", "ADGUARD_PASSWORD"),
+    ];
+
+    let protocol: String = env::var("ADGUARD_PROTOCOL").unwrap_or_else(|_| "http".into()).parse()?;
+    env::set_var("ADGUARD_PROTOCOL", protocol);
+
+    // Parse command line arguments
+    let mut args = std::env::args().peekable();
+    while let Some(arg) = args.next() {
+        for &(flag, var) in &flags {
+            if arg == flag {
+                if let Some(value) = args.peek() {
+                    env::set_var(var, value);
+                    args.next();
+                }
+            }
+        }
+    }
+
+    // If any of the env variables or flags are not yet set, prompt the user to enter them
+    for &key in &["ADGUARD_IP", "ADGUARD_PORT", "ADGUARD_USERNAME", "ADGUARD_PASSWORD"] {
+        if env::var(key).is_err() {
+            println!(
+                "{}",
+                format!("The {} environmental variable is not yet set", key.bold()).yellow()
+            );
+            print!("{}", format!("› Enter a value for {}: ", key).blue().bold());
+            io::stdout().flush()?;
+
+            let mut value = String::new();
+            io::stdin().read_line(&mut value)?;
+            env::set_var(key, value.trim());
+        }
+    }
+
+    // Grab the values of the (now set) environmental variables
+    let ip = get_env("ADGUARD_IP")?;
+    let port = get_env("ADGUARD_PORT")?;
+    let protocol = get_env("ADGUARD_PROTOCOL")?;
+    let username = get_env("ADGUARD_USERNAME")?;
+    let password = get_env("ADGUARD_PASSWORD")?;
+    
+    // Verify that we can connect, authenticate, and that version is supported (exit on failure)
+    verify_connection(&client, ip, port, protocol, username, password).await?;
 
     Ok(())
 }
