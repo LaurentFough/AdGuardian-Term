@@ -4,13 +4,15 @@ use std::{
     time::Duration
 };
 
-use reqwest::{Client, Error};
+use reqwest::{Client};
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde_json::Value;
 use serde::Deserialize;
 use colored::*;
 
 use semver::{Version};
+
+use thiserror::Error;
 
 /// Reusable function that just prints success messages to the console
 fn print_info(text: &str, is_secondary: bool) {
